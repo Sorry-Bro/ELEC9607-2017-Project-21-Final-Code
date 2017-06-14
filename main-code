@@ -1,4 +1,3 @@
-
 #include"stdlib.h"
 #include"math.h"
 #include"U8glib.h"
@@ -14,9 +13,7 @@
 
 U8GLIB_KS0108_128 u8g(53, 51, 49, 47, 45, 43, 41, 39, 42, 52, 50, 44, 46, 48);     // 8Bit Com: D0..D7: 8,9,10,11,4,5,6,7 en, cs1, cs2,di,rw,reset
 
-
 int extendbit(int x);
-
 
 unsigned int pattern[5][4][4]=
 {
@@ -50,8 +47,6 @@ unsigned int pattern[5][4][4]=
         {0x0,0x4,0xC,0x4}},
     
 };
-
-
 
 
 
