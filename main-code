@@ -1,6 +1,13 @@
+//  This code is used for the ELEC9607 project 
+//  3D control Tetris
+//  This is a free software. It is pleasure if this code are helpful.
+//  Actually the code is little messy and clumsy. TAT
+//  Created by Gary & Henry on 2017/6/4.
+//  Copyright © 2017 Gary All rights reserved.
+
 #include"stdlib.h"
 #include"math.h"
-#include"U8glib.h"
+#include "U8glib.h"
 #define move_left 255
 #define move_right 256
 #define move_rotate 257
@@ -11,76 +18,68 @@
 #define map_W 20
 #define blueToothSerial Serial2
 
-U8GLIB_KS0108_128 u8g(53, 51, 49, 47, 45, 43, 41, 39, 42, 52, 50, 44, 46, 48);     // 8Bit Com: D0..D7: 8,9,10,11,4,5,6,7 en, cs1, cs2,di,rw,reset
-
-int extendbit(int x);
+U8GLIB_KS0108_128 u8g(53, 51, 49, 47, 45, 43, 41, 39, 42, 52, 50, 44, 46, 48);     // 8Bit Com: D0..D7: 8,9,10,11,4,5,6,7 en, cs1, cs2,di,rw,reset
 
 unsigned int pattern[5][4][4]=
 {
-    
-    {{0x0,0x6,0x6,0x0}, //suqre
-        {0x0,0x6,0x6,0x0},
-        {0x0,0x6,0x6,0x0},
-        {0x0,0x6,0x6,0x0}},
-    
-    
-    {{0x4,0x4,0x4,0x4},  //line
-        {0x0,0x0,0xF,0x0},
-        {0x4,0x4,0x4,0x4},
-        {0x0,0x0,0xF,0x0}},
-    
-    {{0x0,0xC,0x6,0x0},  //Z
-        {0x0,0x2,0x6,0x4},
-        {0x0,0xC,0x6,0x0},
-        {0x0,0x2,0x6,0x4}},
-    
-    
-    {{0x4,0x4,0x6,0x0},  //L
-        {0x0,0x7,0x4,0x0},
-        {0x0,0x6,0x2,0x2},
-        {0x0,0x2,0xE,0x0}},
-    
-    
-    {{0x0,0x4,0xE,0x0},  //T
-        {0x0,0x4,0x6,0x4},
-        {0x0,0x0,0xE,0x4},
-        {0x0,0x4,0xC,0x4}},
-    
+       {{0x0,0x6,0x6,0x0}, //suqre
+        {0x0,0x6,0x6,0x0},
+        {0x0,0x6,0x6,0x0},
+        {0x0,0x6,0x6,0x0}},
+    
+       {{0x4,0x4,0x4,0x4},  //line
+        {0x0,0x0,0xF,0x0},
+        {0x4,0x4,0x4,0x4},
+        {0x0,0x0,0xF,0x0}},
+    
+       {{0x0,0xC,0x6,0x0},  //Z
+        {0x0,0x2,0x6,0x4},
+        {0x0,0xC,0x6,0x0},
+        {0x0,0x2,0x6,0x4}},
+    
+        {{0x4,0x4,0x6,0x0},  //L
+        {0x0,0x7,0x4,0x0},
+        {0x0,0x6,0x2,0x2},
+        {0x0,0x2,0xE,0x0}},
+    
+       {{0x0,0x4,0xE,0x0},  //T
+        {0x0,0x4,0x6,0x4},
+        {0x0,0x0,0xE,0x4},
+        {0x0,0x4,0xC,0x4}},
+    
 };
 
-
-
 struct current_status{
-    int present_matrix[4][4];
-    int present_x;
-    int present_y;
-    int stop_x;
-    int stop_y;
-    int rotate;
-    
+
+    int present_matrix[4][4];
+    int present_x;
+    int present_y;
+    int stop_x;
+    int stop_y;
+    int rotate;
+    
 }current1,current2;
 
 
-
 struct flag_recogn{
-    int goLeft;
-    int goDown;
-    int goRight;
-    int goBottom;
-    int rotate;
-    int gameover;
-    
+
+    int goLeft;
+    int goDown;
+    int goRight;
+    int goBottom;
+    int rotate;
+    int gameover;
+    
 }flag1,flag2,flag_init;
 
 struct current_status current_init ={{0},0,0,-1,-1,0};
 
 
-
-
-
-int ThreeD_results();      // recognize actions
-void action();             // move up down left right
-void transfer_3d();        //caculate the accelerate by x y z value
+/* functions declare */
+int ThreeD_results();
+int extendbit(int x);
+void action();
+void transfer_3d();
 void setup();
 void box_init();
 void extend_matrix(int x[8],char *p);
@@ -93,6 +92,10 @@ void vanish_block(int lx);
 void composite_map(int who);
 void reset();
 void reset_loop(int x);
+void Selection();
+void Tetris_gaming(int NumbersOfP);
+void isolate_line(int *p,uint8_t *x5, uint8_t *x4, uint8_t *x3, uint8_t *x2, uint8_t *x1);
+/* define vaibles and arrays*/
 uint8_t display_matrix[240]={1};
 uint8_t display_matrix_2[240]={1};
 int score1 = 0;
@@ -105,8 +108,7 @@ int map_temp2[25] = {0};
 int new_pattern = 0;
 int new_pattern_2 = 0;
 const int score_init = 0;
-void isolate_line(int *p,uint8_t *x5, uint8_t *x4, uint8_t *x3, uint8_t *x2, uint8_t *x1);
-int players=0;   // 1 : one player , 2 : two players
+int players=0;   // 1 : one player , 2 : two players
 int fisrt_pattern_flag1 = 0;
 int fisrt_pattern_flag2 = 0;
 void reset_flag(int x);
@@ -114,1025 +116,1011 @@ char dis_scr1[16],dis_scr2[16];
 int bluetoothcontrol();
 int drawgameover1,drawgameover2;
 
-
-
+/*--------- code -----------*/
 void setup(){
-    Serial3.begin(9600);
-    Serial.begin(9600);
-    setupBlueToothConnection();
-    drawgameover1 = 0;
-    drawgameover2 = 0;
-    flag_init.goLeft = -1;
-    flag_init.goDown = -1;
-    flag_init.goRight = -1;
-    flag_init.goBottom = -1;
-    flag_init.rotate = -1;
-    flag_init.gameover = 1;
-
-    if ( u8g.getMode() == U8G_MODE_R3G3B2 ) {
-        u8g.setColorIndex(255);     // white
-    }
-    else if ( u8g.getMode() == U8G_MODE_GRAY2BIT ) {
-        u8g.setColorIndex(3);         // max intensity
-    }
-    else if ( u8g.getMode() == U8G_MODE_BW ) {
-        u8g.setColorIndex(1);         // pixel on
-    }
-    else if ( u8g.getMode() == U8G_MODE_HICOLOR ) {
-        u8g.setHiColorByRGB(255,255,255);
-    }
-    
-    init_map_matrix[24] = 0x1FFFFE;
-    for(int i = 0; i < 24;i++)init_map_matrix[i]=0x200001;
-    randomSeed(analogRead(0));
-    reset();
-      
+    Serial3.begin(9600);
+    Serial.begin(9600);
+    setupBlueToothConnection();
+    drawgameover1 = 0;
+    drawgameover2 = 0;
+    flag_init.goLeft = -1;
+    flag_init.goDown = -1;
+    flag_init.goRight = -1;
+    flag_init.goBottom = -1;
+    flag_init.rotate = -1;
+    flag_init.gameover = 1;
+    
+    if ( u8g.getMode() == U8G_MODE_R3G3B2 ) {
+        u8g.setColorIndex(255);     // white
+    }
+    else if ( u8g.getMode() == U8G_MODE_GRAY2BIT ) {
+        u8g.setColorIndex(3);         // max intensity
+    }
+    else if ( u8g.getMode() == U8G_MODE_BW ) {
+        u8g.setColorIndex(1);         // pixel on
+    }
+    else if ( u8g.getMode() == U8G_MODE_HICOLOR ) {
+        u8g.setHiColorByRGB(255,255,255);
+    }
+    
+    init_map_matrix[24] = 0x1FFFFE;
+    for(int i = 0; i < 24;i++)init_map_matrix[i]=0x200001;
+    randomSeed(analogRead(0));
+    reset();
+    
 }
-
-
 
 void loop(){
-  while(1){
-    initial_game();
-  int ccc = 0;
-  int ddd = 1;
-                                players = 1;
-                               u8g.firstPage();
-                                do {
-                                             u8g.setFont(u8g_font_helvR08);
-                                             u8g.drawTriangle(35,33, 40,36, 35,39);
-                                              u8g.drawStr(50, 40, "1 Player");  
-                                              u8g.drawStr(50, 55, "2 Players");   
-                                              u8g.setFont(u8g_font_7x14B);   
-                                             u8g.drawStr(35, 20, "3D Tetris");                      
-                                   } while( u8g.nextPage() );
-    while(ddd){
-                        ccc = bluetoothcontrol();
-                        if (ccc == 255){
-                                players = 1;
-                                u8g.firstPage();
-                                do {
-                                             u8g.setFont(u8g_font_helvR08);
-                                             u8g.drawTriangle(35,33, 40,36, 35,39);
-                                              u8g.drawStr(50, 40, "1 Player");  
-                                              u8g.drawStr(50, 55, "2 Players");   
-                                              u8g.setFont(u8g_font_7x14B);   
-                                             u8g.drawStr(35, 20, "3D Tetris");                    
-                                   } while( u8g.nextPage() );
-                        }
-                        else if (ccc == 256){
-                                players = 2;
-                                u8g.firstPage();
-                                do {
-                                          
-                                            u8g.drawTriangle(35,48, 40,51, 35,54);
-                                             u8g.setFont(u8g_font_helvR08);
-                                             u8g.drawStr(50, 40, "1 Player");  
-                                             u8g.drawStr(50, 55, "2 Players");  
-                                             u8g.setFont(u8g_font_7x14B);   
-                                             u8g.drawStr(35, 20, "3D Tetris");                   
-                                   } while( u8g.nextPage() );
-
-                          }
-                          else if(ccc == 257 ){
-                                  ddd = 0;
-                          }
-      
-      }
-    ddd = 1;
-    
-   // delay(1000);
-                 
-                        if(players == 1){
-                          int one_playerloop = 1;
-                          while(one_playerloop){
-                                    int ba;
-                                    int i=0;
-                                  
-                                              if(new_pattern == 0 ){
-                                                if( flag1.gameover == 1){
-                                                vanish_block(1);
-                                                random_pattern(1);
-                                                reset_loop(1);
-                                                check_block(Gameover,1);
-                                                composite_map(1);}
-                                                else{
-                                                             new_pattern = 1;
-                                                             drawgameover1 = 1;
-                                                             one_playerloop =0;
-                                                  }
-                                              }
-                                    while(new_pattern)
-                                    {
-                                         reset_flag(1);
-                                        u8g.firstPage();
-                                        do {
-                                            draw2(1);
-                                            u8g.drawBitmapP( 1, 1, 5, 48,display_matrix);
-                                            
-                                            }
-                                        while( u8g.nextPage() );
-                                        ba = ThreeD_results();
-                                         if (i==0)check_block(258,1);
-                                         else check_block(ba,1);
-                                                                     
-                                        composite_map(1);
-                                        drawpattern(0,0,map_temp1,1);
-                                        delay(250);
-                                        i=(i+1)%5;
-                                       
-                                    }
-                                   // vanish_block(1);
-                                    //reset_loop(1);
-                                    }
-                        }
-                        else if (players == 2){
-                                   int two_playersloop_1 = 1;
-                                   int two_playersloop_2 = 1;
-                                   int i=1;
-                                    int j=1;
-                                   while(two_playersloop_1|two_playersloop_2){ 
-                                                      int ba=0;
-                                                       int bb=0;
-
-                                              if(new_pattern == 0 ){
-                                                if( flag1.gameover == 1){
-                                                vanish_block(1);
-                                                random_pattern(1);
-                                                reset_loop(1);
-                                                check_block(Gameover,1);
-                                                composite_map(1);}
-                                                else{
-                                                             new_pattern =1;
-                                                             drawgameover1 = 1;
-                                                             two_playersloop_1 = 0;
-                                                  }
-                                              }
-                                              if(new_pattern_2 == 0 ){
-                                                if(flag2.gameover == 1){
-                                                        vanish_block(2);
-                                                        random_pattern(2); 
-                                                        reset_loop(2);
-                                                        check_block(Gameover,2);
-                                                        composite_map(2);
-                                                                 }
-                                                 else{       new_pattern_2 = 1;
-                                                             drawgameover2 = 1;
-                                                             two_playersloop_2 = 0;
-                                                                   }                
-                                                }
-                                              while(new_pattern &  new_pattern_2)
-                                              {
-                                                   reset_flag(1);
-                                                   reset_flag(2);
-                                                  u8g.firstPage();
-                                                  do {
-                                                     
-                                                    
-                                                      u8g.drawBitmapP( 1, 1, 5, 48,display_matrix);
-                                                      u8g.drawBitmapP( 64, 1, 5, 48,display_matrix_2);
-                                                       draw2(2);
-                                                      }
-                                                  while( u8g.nextPage() );
-                                                  
-                                                  
-                                                   if (i==0)check_block(258,1);
-                                                   else {        ba = ThreeD_results();
-                                                                 check_block(ba,1);}
-                                                   if (j==0)check_block(258,2);
-                                                   else {      
-                                                    bb = bluetoothcontrol();
-                                                               check_block(bb,2);                             
-                                                   }
-                                                  composite_map(1);
-                                                  composite_map(2);
-                                                  drawpattern(0,0,map_temp1,1);
-                                                  drawpattern(0,0,map_temp2,2);
-                                                  delay(250);
-                                                  i=(i+1)%5;
-                                                  j=(j+1)%5;
-                                                 
-                                              }
-                          }
-                        }
-    u8g.firstPage();
-   do {
-                                             u8g.setFont(u8g_font_fub14);
-                                          
-                                             u8g.drawStr(8, 40, "HAVE FUN!");                      
-                                   } while( u8g.nextPage() );
-   delay(2500);
-
-   }
+    while(1){
+        initial_game();
+        players = 1;
+        Selection();
+        Tetris_gaming(players);
+        delay(2500);
+    }
 }
 
 
-
-void reset_flag(int x){
-  if(x == 1){
-    
-         flag1.goLeft = -1;
-    flag1.goDown = -1;
-    flag1.goRight = -1;
-    flag1.goBottom = -1;
-    flag1.rotate = -1;
-   
-   
-     
-     }
-     else if(x == 2){
-             flag2.goLeft = -1;
-    flag2.goDown = -1;
-    flag2.goRight = -1;
-    flag2.goBottom = -1;
-    flag2.rotate = -1;
-     }
-    
-  }
-
-
+/* initial the parameters */
 void initial_game(){
-  
-  reset();
-  drawgameover1 = 0;
-    drawgameover2 = 0;
-    while(Serial2.read()>0){}
-    while(Serial3.read() >= 0){}
-  }
+    
+    reset();
+    drawgameover1 = 0;
+    drawgameover2 = 0;
+    while(Serial2.read()>0){}
+    while(Serial3.read() >= 0){}
+}
 
+/* get the 3D actions */
 int ThreeD_results(){
-    int c = 0;
-    int b = 0;
-    Serial3.println(1);
-    if(Serial3.available())
-    {
-        c=Serial3.parseInt();
-        Serial.print(c);
-        
-    }
-   while(Serial3.read() >= 0){}
-    switch (c)
-    {
-        case 1:  b = 256;
-            break;
-        case 2:  b = 255;
-            break;
-        case 3:  b = 257;
-            break;
-        case 4:  b = 259;
-            break;
-        case 5:  b = 258;
-            break;
-    }
-    return b;
+    int c = 0;
+    int b = 0;
+    Serial3.println(1);
+    if(Serial3.available())
+    {
+        c=Serial3.parseInt();
+        Serial.print(c);
+        
+    }
+    while(Serial3.read() >= 0){}
+    switch (c)
+    {
+        case 1:  b = 256;
+            break;
+        case 2:  b = 255;
+            break;
+        case 3:  b = 257;
+            break;
+        case 4:  b = 259;
+            break;
+        case 5:  b = 258;
+            break;
+    }
+    return b;
 }
 
-
+/* add the block value into the whole game array */
 void composite_map(int who){
-    if(who == 1){
-        if(current1.present_x<18){
-            if(flag1.goLeft == 0){
-                for(int i = 0; i < 25; i++)map_temp1[i] = map_matrix[i];
-                for(int i = 0;i < 4;i++ )map_temp1[current1.present_y + i] = map_temp1[current1.present_y + i] | (current1.present_matrix[current1.rotate][i] << (18-current1.present_x+1));
-                current1.present_x = current1.present_x - 1;
-            }
-            
-            if(flag1.goRight == 0){
-                for(int i = 0; i < 25; i++)map_temp1[i] = map_matrix[i];
-                for(int i = 0;i < 4;i++ )map_temp1[current1.present_y + i] = map_temp1[current1.present_y + i] | (current1.present_matrix[current1.rotate][i] << (18-current1.present_x-1));
-                current1.present_x = current1.present_x + 1;
-            }
-            
-            if(flag1.goBottom == 1){
-                
-                for(int i = 0;i < 4;i++ )map_matrix[current1.stop_y + i] = map_matrix[current1.stop_y + i] | (current1.present_matrix[current1.rotate][i] << (18-current1.stop_x));
-                for(int i = 0; i < 25; i++)map_temp1[i] = map_matrix[i];
-            }
-            
-            if(flag1.goDown == 0){
-                
-                for(int i = 0; i < 25; i++)map_temp1[i] = map_matrix[i];
-                for(int i = 0;i < 4;i++ )map_temp1[current1.present_y + 1 + i] = map_temp1[current1.present_y + 1 + i] | (current1.present_matrix[current1.rotate][i] << (18-current1.present_x));
-                current1.present_y = current1.present_y + 1;
-            }
-            
-            if(flag1.goDown == 1){
-                for(int i = 0;i < 4;i++ )map_matrix[current1.present_y + i] = map_matrix[current1.present_y + i] | (current1.present_matrix[current1.rotate][i] << (18-current1.present_x));
-                for(int i = 0; i < 25; i++)map_temp1[i] = map_matrix[i];
-            }
-            
-            if(flag1.rotate == 0){
-                current1.rotate = (current1.rotate + 1) % 4;
-                for(int i = 0; i < 25; i++)map_temp1[i] = map_matrix[i];
-                for(int i = 0;i < 4;i++ )map_temp1[current1.present_y + i] = map_temp1[current1.present_y + i] | (current1.present_matrix[current1.rotate][i] << (18-current1.present_x));
-               
-            }
-            if(fisrt_pattern_flag1 == 1){
-                for(int i = 0; i < 25; i++)map_temp1[i] = map_matrix[i];
-                for(int i = 0;i < 4;i++ )map_temp1[current1.present_y+i ] = map_temp1[current1.present_y + i ] | (current1.present_matrix[current1.rotate][i] << (18-current1.present_x));
-                fisrt_pattern_flag1 = 0;
-            }
-        }
-        
-        else{
-            if(flag1.goLeft == 0){
-                for(int i = 0; i < 25; i++)map_temp1[i] = map_matrix[i];
-                for(int i = 0;i < 4;i++ )map_temp1[current1.present_y + i] = map_temp1[current1.present_y + i] | (current1.present_matrix[current1.rotate][i] >> (current1.present_x-1-18));
-                current1.present_x = current1.present_x - 1;
-            }
-            
-            if(flag1.goRight == 0){
-                for(int i = 0; i < 25; i++)map_temp1[i] = map_matrix[i];
-                for(int i = 0;i < 4;i++ )map_temp1[current1.present_y + i] = map_temp1[current1.present_y + i] | (current1.present_matrix[current1.rotate][i] >> (current1.present_x+1-18));
-                current1.present_x = current1.present_x + 1;
-            }
-            
-            if(flag1.goBottom == 1){
-                
-                for(int i = 0;i < 4;i++ )map_matrix[current1.stop_y + i] = map_matrix[current1.stop_y + i] | (current1.present_matrix[current1.rotate][i] >>(current1.stop_x-18));
-                for(int i = 0; i < 25; i++)map_temp1[i] = map_matrix[i];
-            }
-            
-            if(flag1.goDown == 0){
-                
-                for(int i = 0; i < 25; i++)map_temp1[i] = map_matrix[i];
-                for(int i = 0;i < 4;i++ )map_temp1[current1.present_y + 1 + i] = map_temp1[current1.present_y + 1 + i] | (current1.present_matrix[current1.rotate][i] >> (current1.present_x-18));
-                current1.present_y = current1.present_y + 1;
-            }
-            
-            if(flag1.goDown == 1){
-                for(int i = 0;i < 4;i++ )map_matrix[current1.present_y + i] = map_matrix[current1.present_y + i] | (current1.present_matrix[current1.rotate][i] >> (current1.present_x-18));
-                for(int i = 0; i < 25; i++)map_temp1[i] = map_matrix[i];
-            }
-            
-            if(flag1.rotate == 0){
-               current1.rotate = (current1.rotate + 1) % 4;
-                for(int i = 0; i < 25; i++)map_temp1[i] = map_matrix[i];
-                for(int i = 0;i < 4;i++ )map_temp1[current1.present_y + i] = map_temp1[current1.present_y + i] | (current1.present_matrix[current1.rotate][i] >> (current1.present_x-18));
-                
-            }
-            if(fisrt_pattern_flag1 == 1){
-                for(int i = 0; i < 25; i++)map_temp1[i] = map_matrix[i];
-                for(int i = 0;i < 4;i++ )map_temp1[current1.present_y+i ] = map_temp1[current1.present_y +i ] | (current1.present_matrix[current1.rotate][i] >> (current1.present_x-18));
-                fisrt_pattern_flag1 = 0;
-            }
-            
-            
-        }
-    }
-    
-    
-    
-    
-    
-    else if(who == 2){
-        if(current2.present_x<18){
-            if(flag2.goLeft == 0){
-                for(int i = 0; i < 25; i++)map_temp2[i] = map_matrix_2[i];
-                for(int i = 0;i < 4;i++ )map_temp2[current2.present_y + i] = map_temp2[current2.present_y + i] | (current2.present_matrix[current2.rotate][i] << (18-current2.present_x+1));
-                current2.present_x = current2.present_x - 1;
-            }
-            
-            if(flag2.goRight == 0){
-                for(int i = 0; i < 25; i++)map_temp2[i] = map_matrix_2[i];
-                for(int i = 0;i < 4;i++ )map_temp2[current2.present_y + i] = map_temp2[current2.present_y + i] | (current2.present_matrix[current2.rotate][i] << (18-current2.present_x-1));
-                current2.present_x = current2.present_x + 1;
-            }
-            
-            if(flag2.goBottom == 1){
-                
-                for(int i = 0;i < 4;i++ )map_matrix_2[current2.stop_y + i] = map_matrix_2[current2.stop_y + i] | (current2.present_matrix[current2.rotate][i] << (18-current2.stop_x));
-                for(int i = 0; i < 25; i++)map_temp2[i] = map_matrix_2[i];
-            }
-            
-            if(flag2.goDown == 0){
-                
-                for(int i = 0; i < 25; i++)map_temp2[i] = map_matrix_2[i];
-                for(int i = 0;i < 4;i++ )map_temp2[current2.present_y + 1 + i] = map_temp2[current2.present_y + 1 + i] | (current2.present_matrix[current2.rotate][i] << (18-current2.present_x));
-                current2.present_y = current2.present_y + 1;
-            }
-            
-            if(flag2.goDown == 1){
-                for(int i = 0;i < 4;i++ )map_matrix_2[current2.present_y + i] = map_matrix_2[current2.present_y + i] | (current2.present_matrix[current2.rotate][i] << (18-current2.present_x));
-                for(int i = 0; i < 25; i++)map_temp2[i] = map_matrix_2[i];
-            }
-            
-            if(flag2.rotate == 0){
-                current2.rotate = (current2.rotate + 1) % 4;
-                for(int i = 0; i < 25; i++)map_temp2[i] = map_matrix_2[i];
-                for(int i = 0;i < 4;i++ )map_temp2[current2.present_y + i] = map_temp2[current2.present_y + i] | (current2.present_matrix[current2.rotate][i] << (18-current2.present_x));
-               
-            }
-            if(fisrt_pattern_flag2 == 1){
-                for(int i = 0; i < 25; i++)map_temp2[i] = map_matrix_2[i];
-                for(int i = 0;i < 4;i++ )map_temp2[current2.present_y+i ] = map_temp2[current2.present_y + i ] | (current2.present_matrix[current2.rotate][i] << (18-current2.present_x));
-                fisrt_pattern_flag2 = 0;
-            }
-        
-    }
-
-     else{
-            if(flag2.goLeft == 0){
-                for(int i = 0; i < 25; i++)map_temp2[i] = map_matrix_2[i];
-                for(int i = 0;i < 4;i++ )map_temp2[current2.present_y + i] = map_temp2[current2.present_y + i] | (current2.present_matrix[current2.rotate][i] >> (current2.present_x-1-18));
-                current2.present_x = current2.present_x - 1;
-            }
-            
-            if(flag2.goRight == 0){
-                for(int i = 0; i < 25; i++)map_temp2[i] = map_matrix_2[i];
-                for(int i = 0;i < 4;i++ )map_temp2[current2.present_y + i] = map_temp1[current2.present_y + i] | (current2.present_matrix[current2.rotate][i] >> (current2.present_x+1-18));
-                current2.present_x = current2.present_x + 1;
-            }
-            
-            if(flag2.goBottom == 1){
-                
-                for(int i = 0;i < 4;i++ )map_matrix_2[current2.stop_y + i] = map_matrix_2[current2.stop_y + i] | (current2.present_matrix[current2.rotate][i] >>(current2.stop_x-18));
-                for(int i = 0; i < 25; i++)map_temp2[i] = map_matrix_2[i];
-            }
-            
-            if(flag2.goDown == 0){
-                
-                for(int i = 0; i < 25; i++)map_temp2[i] = map_matrix_2[i];
-                for(int i = 0;i < 4;i++ )map_temp2[current2.present_y + 1 + i] = map_temp2[current2.present_y + 1 + i] | (current2.present_matrix[current2.rotate][i] >> (current2.present_x-18));
-                current2.present_y = current2.present_y + 1;
-            }
-            
-            if(flag2.goDown == 1){
-                for(int i = 0;i < 4;i++ )map_matrix_2[current2.present_y + i] = map_matrix_2[current2.present_y + i] | (current2.present_matrix[current2.rotate][i] >> (current2.present_x-18));
-                for(int i = 0; i < 25; i++)map_temp2[i] = map_matrix_2[i];
-            }
-            
-            if(flag2.rotate == 0){
-               current2.rotate = (current2.rotate + 1) % 4;
-                for(int i = 0; i < 25; i++)map_temp2[i] = map_matrix_2[i];
-                for(int i = 0;i < 4;i++ )map_temp2[current2.present_y + i] = map_temp2[current2.present_y + i] | (current2.present_matrix[current2.rotate][i] >> (current2.present_x-18));
-                
-            }
-            if(fisrt_pattern_flag2 == 1){
-                for(int i = 0; i < 25; i++)map_temp2[i] = map_matrix_2[i];
-                for(int i = 0;i < 4;i++ )map_temp2[current2.present_y+i ] = map_temp2[current2.present_y +i ] | (current2.present_matrix[current2.rotate][i] >> (current2.present_x-18));
-                fisrt_pattern_flag2 = 0;
-            }
-            
-            
-        }
-    
+    if(who == 1){
+        if(current1.present_x<18){
+            if(flag1.goLeft == 0){
+                for(int i = 0; i < 25; i++)map_temp1[i] = map_matrix[i];
+                for(int i = 0;i < 4;i++ )map_temp1[current1.present_y + i] = map_temp1[current1.present_y + i] | (current1.present_matrix[current1.rotate][i] << (18-current1.present_x+1));
+                current1.present_x = current1.present_x - 1;
+            }
+            
+            if(flag1.goRight == 0){
+                for(int i = 0; i < 25; i++)map_temp1[i] = map_matrix[i];
+                for(int i = 0;i < 4;i++ )map_temp1[current1.present_y + i] = map_temp1[current1.present_y + i] | (current1.present_matrix[current1.rotate][i] << (18-current1.present_x-1));
+                current1.present_x = current1.present_x + 1;
+            }
+            
+            if(flag1.goBottom == 1){
+                
+                for(int i = 0;i < 4;i++ )map_matrix[current1.stop_y + i] = map_matrix[current1.stop_y + i] | (current1.present_matrix[current1.rotate][i] << (18-current1.stop_x));
+                for(int i = 0; i < 25; i++)map_temp1[i] = map_matrix[i];
+            }
+            
+            if(flag1.goDown == 0){
+                
+                for(int i = 0; i < 25; i++)map_temp1[i] = map_matrix[i];
+                for(int i = 0;i < 4;i++ )map_temp1[current1.present_y + 1 + i] = map_temp1[current1.present_y + 1 + i] | (current1.present_matrix[current1.rotate][i] << (18-current1.present_x));
+                current1.present_y = current1.present_y + 1;
+            }
+            
+            if(flag1.goDown == 1){
+                for(int i = 0;i < 4;i++ )map_matrix[current1.present_y + i] = map_matrix[current1.present_y + i] | (current1.present_matrix[current1.rotate][i] << (18-current1.present_x));
+                for(int i = 0; i < 25; i++)map_temp1[i] = map_matrix[i];
+            }
+            
+            if(flag1.rotate == 0){
+                current1.rotate = (current1.rotate + 1) % 4;
+                for(int i = 0; i < 25; i++)map_temp1[i] = map_matrix[i];
+                for(int i = 0;i < 4;i++ )map_temp1[current1.present_y + i] = map_temp1[current1.present_y + i] | (current1.present_matrix[current1.rotate][i] << (18-current1.present_x));
+                
+            }
+            if(fisrt_pattern_flag1 == 1){
+                for(int i = 0; i < 25; i++)map_temp1[i] = map_matrix[i];
+                for(int i = 0;i < 4;i++ )map_temp1[current1.present_y+i ] = map_temp1[current1.present_y + i ] | (current1.present_matrix[current1.rotate][i] << (18-current1.present_x));
+                fisrt_pattern_flag1 = 0;
+            }
+        }
+        
+        else{
+            if(flag1.goLeft == 0){
+                for(int i = 0; i < 25; i++)map_temp1[i] = map_matrix[i];
+                for(int i = 0;i < 4;i++ )map_temp1[current1.present_y + i] = map_temp1[current1.present_y + i] | (current1.present_matrix[current1.rotate][i] >> (current1.present_x-1-18));
+                current1.present_x = current1.present_x - 1;
+            }
+            
+            if(flag1.goRight == 0){
+                for(int i = 0; i < 25; i++)map_temp1[i] = map_matrix[i];
+                for(int i = 0;i < 4;i++ )map_temp1[current1.present_y + i] = map_temp1[current1.present_y + i] | (current1.present_matrix[current1.rotate][i] >> (current1.present_x+1-18));
+                current1.present_x = current1.present_x + 1;
+            }
+            
+            if(flag1.goBottom == 1){
+                
+                for(int i = 0;i < 4;i++ )map_matrix[current1.stop_y + i] = map_matrix[current1.stop_y + i] | (current1.present_matrix[current1.rotate][i] >>(current1.stop_x-18));
+                for(int i = 0; i < 25; i++)map_temp1[i] = map_matrix[i];
+            }
+            
+            if(flag1.goDown == 0){
+                
+                for(int i = 0; i < 25; i++)map_temp1[i] = map_matrix[i];
+                for(int i = 0;i < 4;i++ )map_temp1[current1.present_y + 1 + i] = map_temp1[current1.present_y + 1 + i] | (current1.present_matrix[current1.rotate][i] >> (current1.present_x-18));
+                current1.present_y = current1.present_y + 1;
+            }
+            
+            if(flag1.goDown == 1){
+                for(int i = 0;i < 4;i++ )map_matrix[current1.present_y + i] = map_matrix[current1.present_y + i] | (current1.present_matrix[current1.rotate][i] >> (current1.present_x-18));
+                for(int i = 0; i < 25; i++)map_temp1[i] = map_matrix[i];
+            }
+            
+            if(flag1.rotate == 0){
+                current1.rotate = (current1.rotate + 1) % 4;
+                for(int i = 0; i < 25; i++)map_temp1[i] = map_matrix[i];
+                for(int i = 0;i < 4;i++ )map_temp1[current1.present_y + i] = map_temp1[current1.present_y + i] | (current1.present_matrix[current1.rotate][i] >> (current1.present_x-18));
+                
+            }
+            if(fisrt_pattern_flag1 == 1){
+                for(int i = 0; i < 25; i++)map_temp1[i] = map_matrix[i];
+                for(int i = 0;i < 4;i++ )map_temp1[current1.present_y+i ] = map_temp1[current1.present_y +i ] | (current1.present_matrix[current1.rotate][i] >> (current1.present_x-18));
+                fisrt_pattern_flag1 = 0;
+            }
+        }
+    }
+    
+    
+    else if(who == 2){
+        if(current2.present_x<18){
+            if(flag2.goLeft == 0){
+                for(int i = 0; i < 25; i++)map_temp2[i] = map_matrix_2[i];
+                for(int i = 0;i < 4;i++ )map_temp2[current2.present_y + i] = map_temp2[current2.present_y + i] | (current2.present_matrix[current2.rotate][i] << (18-current2.present_x+1));
+                current2.present_x = current2.present_x - 1;
+            }
+            
+            if(flag2.goRight == 0){
+                for(int i = 0; i < 25; i++)map_temp2[i] = map_matrix_2[i];
+                for(int i = 0;i < 4;i++ )map_temp2[current2.present_y + i] = map_temp2[current2.present_y + i] | (current2.present_matrix[current2.rotate][i] << (18-current2.present_x-1));
+                current2.present_x = current2.present_x + 1;
+            }
+            
+            if(flag2.goBottom == 1){
+                
+                for(int i = 0;i < 4;i++ )map_matrix_2[current2.stop_y + i] = map_matrix_2[current2.stop_y + i] | (current2.present_matrix[current2.rotate][i] << (18-current2.stop_x));
+                for(int i = 0; i < 25; i++)map_temp2[i] = map_matrix_2[i];
+            }
+            
+            if(flag2.goDown == 0){
+                
+                for(int i = 0; i < 25; i++)map_temp2[i] = map_matrix_2[i];
+                for(int i = 0;i < 4;i++ )map_temp2[current2.present_y + 1 + i] = map_temp2[current2.present_y + 1 + i] | (current2.present_matrix[current2.rotate][i] << (18-current2.present_x));
+                current2.present_y = current2.present_y + 1;
+            }
+            
+            if(flag2.goDown == 1){
+                for(int i = 0;i < 4;i++ )map_matrix_2[current2.present_y + i] = map_matrix_2[current2.present_y + i] | (current2.present_matrix[current2.rotate][i] << (18-current2.present_x));
+                for(int i = 0; i < 25; i++)map_temp2[i] = map_matrix_2[i];
+            }
+            
+            if(flag2.rotate == 0){
+                current2.rotate = (current2.rotate + 1) % 4;
+                for(int i = 0; i < 25; i++)map_temp2[i] = map_matrix_2[i];
+                for(int i = 0;i < 4;i++ )map_temp2[current2.present_y + i] = map_temp2[current2.present_y + i] | (current2.present_matrix[current2.rotate][i] << (18-current2.present_x));
+                
+            }
+            if(fisrt_pattern_flag2 == 1){
+                for(int i = 0; i < 25; i++)map_temp2[i] = map_matrix_2[i];
+                for(int i = 0;i < 4;i++ )map_temp2[current2.present_y+i ] = map_temp2[current2.present_y + i ] | (current2.present_matrix[current2.rotate][i] << (18-current2.present_x));
+                fisrt_pattern_flag2 = 0;
+            }
+            
+        }
+        
+        else{
+            if(flag2.goLeft == 0){
+                for(int i = 0; i < 25; i++)map_temp2[i] = map_matrix_2[i];
+                for(int i = 0;i < 4;i++ )map_temp2[current2.present_y + i] = map_temp2[current2.present_y + i] | (current2.present_matrix[current2.rotate][i] >> (current2.present_x-1-18));
+                current2.present_x = current2.present_x - 1;
+            }
+            
+            if(flag2.goRight == 0){
+                for(int i = 0; i < 25; i++)map_temp2[i] = map_matrix_2[i];
+                for(int i = 0;i < 4;i++ )map_temp2[current2.present_y + i] = map_temp1[current2.present_y + i] | (current2.present_matrix[current2.rotate][i] >> (current2.present_x+1-18));
+                current2.present_x = current2.present_x + 1;
+            }
+            
+            if(flag2.goBottom == 1){
+                
+                for(int i = 0;i < 4;i++ )map_matrix_2[current2.stop_y + i] = map_matrix_2[current2.stop_y + i] | (current2.present_matrix[current2.rotate][i] >>(current2.stop_x-18));
+                for(int i = 0; i < 25; i++)map_temp2[i] = map_matrix_2[i];
+            }
+            
+            if(flag2.goDown == 0){
+                
+                for(int i = 0; i < 25; i++)map_temp2[i] = map_matrix_2[i];
+                for(int i = 0;i < 4;i++ )map_temp2[current2.present_y + 1 + i] = map_temp2[current2.present_y + 1 + i] | (current2.present_matrix[current2.rotate][i] >> (current2.present_x-18));
+                current2.present_y = current2.present_y + 1;
+            }
+            
+            if(flag2.goDown == 1){
+                for(int i = 0;i < 4;i++ )map_matrix_2[current2.present_y + i] = map_matrix_2[current2.present_y + i] | (current2.present_matrix[current2.rotate][i] >> (current2.present_x-18));
+                for(int i = 0; i < 25; i++)map_temp2[i] = map_matrix_2[i];
+            }
+            
+            if(flag2.rotate == 0){
+                current2.rotate = (current2.rotate + 1) % 4;
+                for(int i = 0; i < 25; i++)map_temp2[i] = map_matrix_2[i];
+                for(int i = 0;i < 4;i++ )map_temp2[current2.present_y + i] = map_temp2[current2.present_y + i] | (current2.present_matrix[current2.rotate][i] >> (current2.present_x-18));
+                
+            }
+            if(fisrt_pattern_flag2 == 1){
+                for(int i = 0; i < 25; i++)map_temp2[i] = map_matrix_2[i];
+                for(int i = 0;i < 4;i++ )map_temp2[current2.present_y+i ] = map_temp2[current2.present_y +i ] | (current2.present_matrix[current2.rotate][i] >> (current2.present_x-18));
+                fisrt_pattern_flag2 = 0;
+            }
+            
+            
+        }
+        
+    }
+    
 }
 
-}
-
+/* reset the varibles for a new game */
 void reset(){
-    
-    flag1 = flag_init;
-    flag2 = flag_init;
-    score1 = score_init;
-    score2 = score_init;
-    current1 = current_init;
-    current2 = current_init;
-    for(int i = 0;i<25;i++)map_matrix[i] = init_map_matrix[i];
-    for(int i = 0;i<25;i++)map_matrix_2[i] = init_map_matrix[i];
-    for(int i = 0;i<25;i++)map_temp1[i] = 0;
-    for(int i = 0;i<25;i++)map_temp2[i] = 0;
-    
+    
+    flag1 = flag_init;
+    flag2 = flag_init;
+    score1 = score_init;
+    score2 = score_init;
+    current1 = current_init;
+    current2 = current_init;
+    for(int i = 0;i<25;i++)map_matrix[i] = init_map_matrix[i];
+    for(int i = 0;i<25;i++)map_matrix_2[i] = init_map_matrix[i];
+    for(int i = 0;i<25;i++)map_temp1[i] = 0;
+    for(int i = 0;i<25;i++)map_temp2[i] = 0;
+    
 }
 
+/*reset the flags to generate a new block */
 void reset_loop(int x){
-    if (x ==1){
-      flag1 = flag_init; 
-      new_pattern = 1;
-    }
-    else if (x ==2 ){
-    flag2 = flag_init;
-    new_pattern_2 = 1;
-    }
+    if (x ==1){
+        flag1 = flag_init;
+        new_pattern = 1;
+    }
+    else if (x ==2 ){
+        flag2 = flag_init;
+        new_pattern_2 = 1;
+    }
 }
 
-void check_block(int x,int one){         
-    
-    if(one == 1){
-        
-        switch (x){
-            case move_left: {
-                for(int i=0;i<4;i++){
-                    if(current1.present_x < 18){
-                        if((((current1.present_matrix[current1.rotate][i] << (18-current1.present_x+1))) & map_matrix[current1.present_y+i]) == 0)flag1.goLeft = 0;
-                        else {
-                            flag1.goLeft = 1;
-                            check_block(move_down,1);
-                            break;
-                        }
-                    }
-                    else {
-                        if((((current1.present_matrix[current1.rotate][i]>> (current1.present_x-1-18))) & map_matrix[current1.present_y+i]) == 0)flag1.goLeft = 0;
-                        else {
-                            flag1.goLeft = 1;
-                            check_block(move_down,1);
-                            break;
-                        }
-                    }
-                }
-                break;
-            }
-                
-            case move_right:{
-                
-                for(int i=0;i<4;i++){
-                    if(current1.present_x <18){
-                        if(((current1.present_matrix[current1.rotate][i] << (18-current1.present_x-1)) & map_matrix[current1.present_y+i]) == 0)flag1.goRight = 0;
-                        else {
-                            flag1.goRight = 1;
-                            check_block(move_down,1);
-                            break;
-                        }
-                    }
-                    
-                    else {
-                        if(((current1.present_matrix[current1.rotate][i] >> (current1.present_x-18+1)) & map_matrix[current1.present_y+i]) == 0)flag1.goRight = 0;
-                        else {
-                            flag1.goRight = 1;
-                            check_block(move_down,1);
-                            break;
-                        }
-                    }
-                }
-                break;
-            }
-            case move_rotate:{
-                for(int i=0;i<4;i++){
-                    if(current1.present_x < 18){
-                        if(((current1.present_matrix[current1.rotate+1][i] << (18-current1.present_x)) & map_matrix[current1.present_y+i]) == 0){
-                            flag1.rotate = 0;
-                            
-                            
-                        }
-                        
-                        else {
-                            
-                            flag1.rotate = 1;
-                            break;
-                        }
-                    }
-                    else {
-                        if(((current1.present_matrix[current1.rotate+1][i] >> (current1.present_x-18)) & map_matrix[current1.present_y+i]) == 0){
-                            flag1.rotate = 0;
-                            
-                            
-                        }
-                        
-                        else {
-                         
-                            flag1.rotate = 1;
-                            break;
-                        }
-                        
-                    }
-                }
-                break;
-            }
-                
-            case move_down:{
-                for(int i=0;i<4;i++){
-                    if(current1.present_x < 18){
-                        if(((current1.present_matrix[current1.rotate][i] << (18-current1.present_x)) & map_matrix[current1.present_y+i+1]) == 0)flag1.goDown = 0;
-                        else {
-                            flag1.goDown = 1;
-                            current1.stop_x = current1.present_x;
-                            current1.stop_y = current1.present_y;
-                            new_pattern = 0;
-                            break;
-                        }
-                    }
-                    else{
-                        if(((current1.present_matrix[current1.rotate][i] >>(current1.present_x-18)) & map_matrix[current1.present_y+i+1]) == 0)flag1.goDown = 0;
-                        else {
-                            flag1.goDown = 1;
-                            current1.stop_x = current1.present_x;
-                            current1.stop_y = current1.present_y;
-                            new_pattern = 0;
-                            break;
-                        }
-                        
-                    }
-                }
-                break;
-            }
-                
-            case Gameover: {
-                for(int i=0;i<4;i++){
-                    if(current1.present_x <18){
-                        if(((current1.present_matrix[current1.rotate][i] << (18-current1.present_x)) & map_matrix[current1.present_y+i]) == 0) flag1.gameover = 1;
-                        else {
-                            flag1.gameover = 0;
-                            break;
-                        }
-                    }
-                    else{
-                        if(((current1.present_matrix[current1.rotate][i] >> (current1.present_x-18)) & map_matrix[current1.present_y+i]) == 0) flag1.gameover = 1;
-                        else {
-                            flag1.gameover = 0;
-                            break;
-                        }
-                    }
-                }
-                break;
-            }
-                
-            case move_bottom:{
-                int lop = 0;
-                while(flag1.goBottom != 1){
-                    
-                    for(int i = 0;i < 4;i++){
-                        
-                        if(current1.present_x <18){
-                            if(((current1.present_matrix[current1.rotate][i] << (18-current1.present_x)) & map_matrix[current1.present_y+i+1+lop]) == 0){
-                                flag1.goBottom = 0;
-                            }
-                            else {
-                                flag1.goBottom = 1;
-                                current1.stop_x = current1.present_x;
-                                current1.stop_y = current1.present_y+lop;
-                                new_pattern = 0;
-                                break;
-                            }
-                        }
-                        else{
-                            if(((current1.present_matrix[current1.rotate][i] >> (current1.present_x-18)) & map_matrix[current1.present_y+i+1+lop]) == 0){
-                                flag1.goBottom = 0;
-                            }
-                            else {
-                                flag1.goBottom = 1;
-                                current1.stop_x = current1.present_x;
-                                current1.stop_y = current1.present_y+lop;
-                                new_pattern = 0;
-                                break;
-                            }
-                        }
-                    }
-                    lop =lop + 1;
-                }
-                break;
-                
-            }
-        }
-        
-        
-    }
-   else if(one == 2){
-        
-        switch (x){
-            case move_left: {
-                for(int i=0;i<4;i++){
-                    if(current2.present_x < 18){
-                        if((((current2.present_matrix[current2.rotate][i] << (18-current2.present_x+1))) & map_matrix_2[current2.present_y+i]) == 0)flag2.goLeft = 0;
-                        else {
-                            flag2.goLeft = 1;
-                            check_block(move_down,2);
-                            break;
-                        }
-                    }
-                    else {
-                        if((((current2.present_matrix[current2.rotate][i]>> (current2.present_x-1-18))) & map_matrix_2[current2.present_y+i]) == 0)flag2.goLeft = 0;
-                        else {
-                            flag2.goLeft = 1;
-                            check_block(move_down,2);
-                            break;
-                        }
-                    }
-                }
-                break;
-            }
-                
-            case move_right:{
-                
-                for(int i=0;i<4;i++){
-                    if(current2.present_x <18){
-                        if(((current2.present_matrix[current2.rotate][i] << (18-current2.present_x-1)) & map_matrix_2[current2.present_y+i]) == 0)flag2.goRight = 0;
-                        else {
-                            flag2.goRight = 1;
-                            check_block(move_down,2);
-                            break;
-                        }
-                    }
-                    
-                    else {
-                        if(((current2.present_matrix[current2.rotate][i] >> (current2.present_x-18+1)) & map_matrix_2[current2.present_y+i]) == 0)flag2.goRight = 0;
-                        else {
-                            flag2.goRight = 1;
-                            check_block(move_down,2);
-                            break;
-                        }
-                    }
-                }
-                break;
-            }
-            case move_rotate:{
-                for(int i=0;i<4;i++){
-                    if(current2.present_x < 18){
-                        if(((current2.present_matrix[current2.rotate+1][i] << (18-current2.present_x)) & map_matrix_2[current2.present_y+i]) == 0){
-                            flag2.rotate = 0;
-                            
-                            
-                        }
-                        
-                        else {
-                            
-                            flag2.rotate = 1;
-                            break;
-                        }
-                    }
-                    else {
-                        if(((current2.present_matrix[current2.rotate+1][i] >> (current2.present_x-18)) & map_matrix_2[current2.present_y+i]) == 0){
-                            flag2.rotate = 0;
-                            
-                            
-                        }
-                        
-                        else {
-                         
-                            flag2.rotate = 1;
-                            break;
-                        }
-                        
-                    }
-                }
-                break;
-            }
-                
-            case move_down:{
-                for(int i=0;i<4;i++){
-                    if(current2.present_x < 18){
-                        if(((current2.present_matrix[current2.rotate][i] << (18-current2.present_x)) & map_matrix_2[current2.present_y+i+1]) == 0)flag2.goDown = 0;
-                        else {
-                            flag2.goDown = 1;
-                            current2.stop_x = current2.present_x;
-                            current2.stop_y = current2.present_y;
-                            new_pattern_2 = 0;
-                            break;
-                        }
-                    }
-                    else{
-                        if(((current2.present_matrix[current2.rotate][i] >>(current2.present_x-18)) & map_matrix_2[current2.present_y+i+1]) == 0)flag2.goDown = 0;
-                        else {
-                            flag2.goDown = 1;
-                            current2.stop_x = current2.present_x;
-                            current2.stop_y = current2.present_y;
-                            new_pattern_2 = 0;
-                            break;
-                        }
-                        
-                    }
-                }
-                break;
-            }
-                
-            case Gameover: {
-                for(int i=0;i<4;i++){
-                    if(current2.present_x <18){
-                        if(((current2.present_matrix[current2.rotate][i] << (18-current2.present_x)) & map_matrix_2[current2.present_y+i]) == 0) flag2.gameover = 1;
-                        else {
-                            flag2.gameover = 0;
-                            break;
-                        }
-                    }
-                    else{
-                        if(((current2.present_matrix[current2.rotate][i] >> (current2.present_x-18)) & map_matrix_2[current2.present_y+i]) == 0) flag2.gameover = 1;
-                        else {
-                            flag2.gameover = 0;
-                            break;
-                        }
-                    }
-                }
-                break;
-            }
-                
-            case move_bottom:{
-                int lop = 0;
-                while(flag2.goBottom != 1){
-                    
-                    for(int i = 0;i < 4;i++){
-                        
-                        if(current2.present_x <18){
-                            if(((current2.present_matrix[current2.rotate][i] << (18-current2.present_x)) & map_matrix_2[current2.present_y+i+1+lop]) == 0){
-                                flag2.goBottom = 0;
-                            }
-                            else {
-                                flag2.goBottom = 1;
-                                current2.stop_x = current2.present_x;
-                                current2.stop_y = current2.present_y+lop;
-                                new_pattern_2 = 0;
-                                break;
-                            }
-                        }
-                        else{
-                            if(((current2.present_matrix[current2.rotate][i] >> (current2.present_x-18)) & map_matrix_2[current2.present_y+i+1+lop]) == 0){
-                                flag2.goBottom = 0;
-                            }
-                            else {
-                                flag2.goBottom = 1;
-                                current2.stop_x = current2.present_x;
-                                current2.stop_y = current2.present_y+lop;
-                                new_pattern_2 = 0;
-                                break;
-                            }
-                        }
-                    }
-                    lop =lop + 1;
-                }
-                break;
-                
-            }
-        }
-        
-        
-    }
+/*reset the last block action flage to get ready recieve a new action*/
+void reset_flag(int x){
+    if(x == 1){
+        
+        flag1.goLeft = -1;
+        flag1.goDown = -1;
+        flag1.goRight = -1;
+        flag1.goBottom = -1;
+        flag1.rotate = -1;
+        
+        
+        
+    }
+    else if(x == 2){
+        flag2.goLeft = -1;
+        flag2.goDown = -1;
+        flag2.goRight = -1;
+        flag2.goBottom = -1;
+        flag2.rotate = -1;
+    }
+    
 }
 
+/*judge the block movement accessible */
+void check_block(int x,int one){
+    
+    if(one == 1){
+        
+        switch (x){
+            case move_left: {
+                for(int i=0;i<4;i++){
+                    if(current1.present_x < 18){
+                        if((((current1.present_matrix[current1.rotate][i] << (18-current1.present_x+1))) & map_matrix[current1.present_y+i]) == 0)flag1.goLeft = 0;
+                        else {
+                            flag1.goLeft = 1;
+                            check_block(move_down,1);
+                            break;
+                        }
+                    }
+                    else {
+                        if((((current1.present_matrix[current1.rotate][i]>> (current1.present_x-1-18))) & map_matrix[current1.present_y+i]) == 0)flag1.goLeft = 0;
+                        else {
+                            flag1.goLeft = 1;
+                            check_block(move_down,1);
+                            break;
+                        }
+                    }
+                }
+                break;
+            }
+                
+            case move_right:{
+                
+                for(int i=0;i<4;i++){
+                    if(current1.present_x <18){
+                        if(((current1.present_matrix[current1.rotate][i] << (18-current1.present_x-1)) & map_matrix[current1.present_y+i]) == 0)flag1.goRight = 0;
+                        else {
+                            flag1.goRight = 1;
+                            check_block(move_down,1);
+                            break;
+                        }
+                    }
+                    
+                    else {
+                        if(((current1.present_matrix[current1.rotate][i] >> (current1.present_x-18+1)) & map_matrix[current1.present_y+i]) == 0)flag1.goRight = 0;
+                        else {
+                            flag1.goRight = 1;
+                            check_block(move_down,1);
+                            break;
+                        }
+                    }
+                }
+                break;
+            }
+            case move_rotate:{
+                for(int i=0;i<4;i++){
+                    if(current1.present_x < 18){
+                        if(((current1.present_matrix[current1.rotate+1][i] << (18-current1.present_x)) & map_matrix[current1.present_y+i]) == 0){
+                            flag1.rotate = 0;
+                            
+                            
+                        }
+                        
+                        else {
+                            
+                            flag1.rotate = 1;
+                            break;
+                        }
+                    }
+                    else {
+                        if(((current1.present_matrix[current1.rotate+1][i] >> (current1.present_x-18)) & map_matrix[current1.present_y+i]) == 0){
+                            flag1.rotate = 0;
+                            
+                            
+                        }
+                        
+                        else {
+                            
+                            flag1.rotate = 1;
+                            break;
+                        }
+                        
+                    }
+                }
+                break;
+            }
+                
+            case move_down:{
+                for(int i=0;i<4;i++){
+                    if(current1.present_x < 18){
+                        if(((current1.present_matrix[current1.rotate][i] << (18-current1.present_x)) & map_matrix[current1.present_y+i+1]) == 0)flag1.goDown = 0;
+                        else {
+                            flag1.goDown = 1;
+                            current1.stop_x = current1.present_x;
+                            current1.stop_y = current1.present_y;
+                            new_pattern = 0;
+                            break;
+                        }
+                    }
+                    else{
+                        if(((current1.present_matrix[current1.rotate][i] >>(current1.present_x-18)) & map_matrix[current1.present_y+i+1]) == 0)flag1.goDown = 0;
+                        else {
+                            flag1.goDown = 1;
+                            current1.stop_x = current1.present_x;
+                            current1.stop_y = current1.present_y;
+                            new_pattern = 0;
+                            break;
+                        }
+                        
+                    }
+                }
+                break;
+            }
+                
+            case Gameover: {
+                for(int i=0;i<4;i++){
+                    if(current1.present_x <18){
+                        if(((current1.present_matrix[current1.rotate][i] << (18-current1.present_x)) & map_matrix[current1.present_y+i]) == 0) flag1.gameover = 1;
+                        else {
+                            flag1.gameover = 0;
+                            break;
+                        }
+                    }
+                    else{
+                        if(((current1.present_matrix[current1.rotate][i] >> (current1.present_x-18)) & map_matrix[current1.present_y+i]) == 0) flag1.gameover = 1;
+                        else {
+                            flag1.gameover = 0;
+                            break;
+                        }
+                    }
+                }
+                break;
+            }
+                
+            case move_bottom:{
+                int lop = 0;
+                while(flag1.goBottom != 1){
+                    
+                    for(int i = 0;i < 4;i++){
+                        
+                        if(current1.present_x <18){
+                            if(((current1.present_matrix[current1.rotate][i] << (18-current1.present_x)) & map_matrix[current1.present_y+i+1+lop]) == 0){
+                                flag1.goBottom = 0;
+                            }
+                            else {
+                                flag1.goBottom = 1;
+                                current1.stop_x = current1.present_x;
+                                current1.stop_y = current1.present_y+lop;
+                                new_pattern = 0;
+                                break;
+                            }
+                        }
+                        else{
+                            if(((current1.present_matrix[current1.rotate][i] >> (current1.present_x-18)) & map_matrix[current1.present_y+i+1+lop]) == 0){
+                                flag1.goBottom = 0;
+                            }
+                            else {
+                                flag1.goBottom = 1;
+                                current1.stop_x = current1.present_x;
+                                current1.stop_y = current1.present_y+lop;
+                                new_pattern = 0;
+                                break;
+                            }
+                        }
+                    }
+                    lop =lop + 1;
+                }
+                break;
+                
+            }
+        }
+        
+        
+    }
+    else if(one == 2){
+        
+        switch (x){
+            case move_left: {
+                for(int i=0;i<4;i++){
+                    if(current2.present_x < 18){
+                        if((((current2.present_matrix[current2.rotate][i] << (18-current2.present_x+1))) & map_matrix_2[current2.present_y+i]) == 0)flag2.goLeft = 0;
+                        else {
+                            flag2.goLeft = 1;
+                            check_block(move_down,2);
+                            break;
+                        }
+                    }
+                    else {
+                        if((((current2.present_matrix[current2.rotate][i]>> (current2.present_x-1-18))) & map_matrix_2[current2.present_y+i]) == 0)flag2.goLeft = 0;
+                        else {
+                            flag2.goLeft = 1;
+                            check_block(move_down,2);
+                            break;
+                        }
+                    }
+                }
+                break;
+            }
+                
+            case move_right:{
+                
+                for(int i=0;i<4;i++){
+                    if(current2.present_x <18){
+                        if(((current2.present_matrix[current2.rotate][i] << (18-current2.present_x-1)) & map_matrix_2[current2.present_y+i]) == 0)flag2.goRight = 0;
+                        else {
+                            flag2.goRight = 1;
+                            check_block(move_down,2);
+                            break;
+                        }
+                    }
+                    
+                    else {
+                        if(((current2.present_matrix[current2.rotate][i] >> (current2.present_x-18+1)) & map_matrix_2[current2.present_y+i]) == 0)flag2.goRight = 0;
+                        else {
+                            flag2.goRight = 1;
+                            check_block(move_down,2);
+                            break;
+                        }
+                    }
+                }
+                break;
+            }
+            case move_rotate:{
+                for(int i=0;i<4;i++){
+                    if(current2.present_x < 18){
+                        if(((current2.present_matrix[current2.rotate+1][i] << (18-current2.present_x)) & map_matrix_2[current2.present_y+i]) == 0){
+                            flag2.rotate = 0;
+                            
+                            
+                        }
+                        
+                        else {
+                            
+                            flag2.rotate = 1;
+                            break;
+                        }
+                    }
+                    else {
+                        if(((current2.present_matrix[current2.rotate+1][i] >> (current2.present_x-18)) & map_matrix_2[current2.present_y+i]) == 0){
+                            flag2.rotate = 0;
+                            
+                            
+                        }
+                        
+                        else {
+                            
+                            flag2.rotate = 1;
+                            break;
+                        }
+                        
+                    }
+                }
+                break;
+            }
+                
+            case move_down:{
+                for(int i=0;i<4;i++){
+                    if(current2.present_x < 18){
+                        if(((current2.present_matrix[current2.rotate][i] << (18-current2.present_x)) & map_matrix_2[current2.present_y+i+1]) == 0)flag2.goDown = 0;
+                        else {
+                            flag2.goDown = 1;
+                            current2.stop_x = current2.present_x;
+                            current2.stop_y = current2.present_y;
+                            new_pattern_2 = 0;
+                            break;
+                        }
+                    }
+                    else{
+                        if(((current2.present_matrix[current2.rotate][i] >>(current2.present_x-18)) & map_matrix_2[current2.present_y+i+1]) == 0)flag2.goDown = 0;
+                        else {
+                            flag2.goDown = 1;
+                            current2.stop_x = current2.present_x;
+                            current2.stop_y = current2.present_y;
+                            new_pattern_2 = 0;
+                            break;
+                        }
+                        
+                    }
+                }
+                break;
+            }
+                
+            case Gameover: {
+                for(int i=0;i<4;i++){
+                    if(current2.present_x <18){
+                        if(((current2.present_matrix[current2.rotate][i] << (18-current2.present_x)) & map_matrix_2[current2.present_y+i]) == 0) flag2.gameover = 1;
+                        else {
+                            flag2.gameover = 0;
+                            break;
+                        }
+                    }
+                    else{
+                        if(((current2.present_matrix[current2.rotate][i] >> (current2.present_x-18)) & map_matrix_2[current2.present_y+i]) == 0) flag2.gameover = 1;
+                        else {
+                            flag2.gameover = 0;
+                            break;
+                        }
+                    }
+                }
+                break;
+            }
+                
+            case move_bottom:{
+                int lop = 0;
+                while(flag2.goBottom != 1){
+                    
+                    for(int i = 0;i < 4;i++){
+                        
+                        if(current2.present_x <18){
+                            if(((current2.present_matrix[current2.rotate][i] << (18-current2.present_x)) & map_matrix_2[current2.present_y+i+1+lop]) == 0){
+                                flag2.goBottom = 0;
+                            }
+                            else {
+                                flag2.goBottom = 1;
+                                current2.stop_x = current2.present_x;
+                                current2.stop_y = current2.present_y+lop;
+                                new_pattern_2 = 0;
+                                break;
+                            }
+                        }
+                        else{
+                            if(((current2.present_matrix[current2.rotate][i] >> (current2.present_x-18)) & map_matrix_2[current2.present_y+i+1+lop]) == 0){
+                                flag2.goBottom = 0;
+                            }
+                            else {
+                                flag2.goBottom = 1;
+                                current2.stop_x = current2.present_x;
+                                current2.stop_y = current2.present_y+lop;
+                                new_pattern_2 = 0;
+                                break;
+                            }
+                        }
+                    }
+                    lop =lop + 1;
+                }
+                break;
+            }
+        }
+        
+        
+    }
+}
+
+/* vanishing where the blocks form a line */
 void vanish_block(int lx){
-    int num = 0;
-    int temp_y = 0;
-    if(lx == 1){
-        if(current1.stop_x >= 0 && current1.stop_y >= 0){
-            temp_y = current1.stop_y;
-            for(int i = 0;i < 4;i ++){
-                if(map_matrix[temp_y + i] == 0x3FFFFF){
-                  Serial.print(temp_y);
-                    map_matrix[temp_y + i] = 0x200001;
-                    num = num + 1;
-                    for(int j = temp_y + i;j > 0;j --){
-                        map_matrix[j] = map_matrix[j - 1];
-                    }
-                    map_matrix[0] = 0x200001;
-                }
-
-            }
-            if(num!=0){score1 = score1 + 200 * pow(1.3,num);
-             num = 0;}
-        }
-    }
-    else if(lx == 2){
-        if(current2.stop_x > 0 && current2.stop_y > 0){
-            temp_y = current2.stop_y;
-            for(int i = 0;i < 4;i ++){
-                if(map_matrix_2[temp_y + i] == 0x3FFFFF){
-                    map_matrix_2[temp_y + i] = 0x200001;
-                    num = num + 1;
-                    for(int j = temp_y + i;j > 0;j --){
-                        map_matrix_2[j] = map_matrix_2[j - 1];
-                    }
-                    map_matrix_2[0] = 0;
-                }
-                
-            }
-            if(num!=0){score2 = score2 + 200 * pow(1.3,num);
-             num = 0;}
-        }
-    }
+    int num = 0;
+    int temp_y = 0;
+    if(lx == 1){
+        if(current1.stop_x >= 0 && current1.stop_y >= 0){
+            temp_y = current1.stop_y;
+            for(int i = 0;i < 4;i ++){
+                if(map_matrix[temp_y + i] == 0x3FFFFF){
+                    Serial.print(temp_y);
+                    map_matrix[temp_y + i] = 0x200001;
+                    num = num + 1;
+                    for(int j = temp_y + i;j > 0;j --){
+                        map_matrix[j] = map_matrix[j - 1];
+                    }
+                    map_matrix[0] = 0x200001;
+                }
+                
+            }
+            if(num!=0){score1 = score1 + 200 * pow(1.3,num);
+                num = 0;}
+        }
+    }
+    else if(lx == 2){
+        if(current2.stop_x > 0 && current2.stop_y > 0){
+            temp_y = current2.stop_y;
+            for(int i = 0;i < 4;i ++){
+                if(map_matrix_2[temp_y + i] == 0x3FFFFF){
+                    map_matrix_2[temp_y + i] = 0x200001;
+                    num = num + 1;
+                    for(int j = temp_y + i;j > 0;j --){
+                        map_matrix_2[j] = map_matrix_2[j - 1];
+                    }
+                    map_matrix_2[0] = 0;
+                }
+                
+            }
+            if(num!=0){score2 = score2 + 200 * pow(1.3,num);
+                num = 0;}
+        }
+    }
 }
 
 
+/* display the tetris */
+void drawpattern(int x, int y, int *ios, int num){           // hua xiang su
 
-
-
-void drawpattern(int x, int y, int *ios, int num){           
-    if(num == 1){
-    for(int j =0;j<48;j++){
-        
-        isolate_line(ios, &display_matrix[0+5*j], &display_matrix[1+5*j], &display_matrix[2+5*j], &display_matrix[3+5*j], &display_matrix[4+5*j]);
-        if(j%2 == 1)ios=ios+1;
-    }
-  
-    }
-    else if(num == 2) {
-    for(int j =0;j<48;j++){
-        
-        isolate_line(ios, &display_matrix_2[0+5*j], &display_matrix_2[1+5*j], &display_matrix_2[2+5*j], &display_matrix_2[3+5*j], &display_matrix_2[4+5*j]);
-        if(j%2 == 1)ios=ios+1;
-    }
-    }
+    if(num == 1){
+        for(int j =0;j<48;j++){
+            
+            isolate_line(ios, &display_matrix[0+5*j], &display_matrix[1+5*j], &display_matrix[2+5*j], &display_matrix[3+5*j], &display_matrix[4+5*j]);
+            if(j%2 == 1)ios=ios+1;
+        }
+        
+    }
+    else if(num == 2) {
+        for(int j =0;j<48;j++){
+            
+            isolate_line(ios, &display_matrix_2[0+5*j], &display_matrix_2[1+5*j], &display_matrix_2[2+5*j], &display_matrix_2[3+5*j], &display_matrix_2[4+5*j]);
+            if(j%2 == 1)ios=ios+1;
+        }
+    }
 }
 
+/* split the 22bits number into 5 4bits numbers and expand them */
 void isolate_line(int *p,uint8_t *x5, uint8_t *x4,uint8_t *x3, uint8_t *x2, uint8_t *x1){
-    *x1 = extendbit((*p & 0x1E) >> 1);
-    *x2 = extendbit((*p & 0x1E0) >> 5);
-    *x3 = extendbit((*p & 0x1E00) >> 9);
-    *x4 = extendbit((*p & 0x1E000) >> 13);
-    *x5 = extendbit((*p & 0x1E0000) >> 17);
+
+    *x1 = extendbit((*p & 0x1E) >> 1);
+    *x2 = extendbit((*p & 0x1E0) >> 5);
+    *x3 = extendbit((*p & 0x1E00) >> 9);
+    *x4 = extendbit((*p & 0x1E000) >> 13);
+    *x5 = extendbit((*p & 0x1E0000) >> 17);
 }
 
+/* expand a 4 bits number to 8 bits */
 int extendbit(int x) {
-    int y=0;
-    y=((x&1)|(x&1)<<1)|((x&2)<<2|(x&2)<<1)|((x&4)<<2|((x&4)<<3))|((x&8)<<3|(x&8)<<4);
-    return y;
-    
+    int y=0;
+    y=((x&1)|(x&1)<<1)|((x&2)<<2|(x&2)<<1)|((x&4)<<2|((x&4)<<3))|((x&8)<<3|(x&8)<<4);
+    return y;
+    
 }
 
+/* generate a block randomly */
+void random_pattern(int player){
+    int x = 0 ;
+    if(player == 1){
 
-void random_pattern(int player){        
-    int x = 0 ;
-    if(player == 1){
-        x = random(5);
-        for(int i = 0;i < 4;i++){
-            for(int j = 0; j < 4; j++)current1.present_matrix[i][j] = pattern[x][i][j];
-        }
-        current1.present_x = 10;
-        current1.present_y = 0;
-        score1 = score1 + 50;
-        fisrt_pattern_flag1 = 1;
-        
-    }
-     else if (player == 2){
-     
-     
-     x = random(5);
-     for(int i = 0;i < 4;i++){
-     for(int j = 0; j < 4; j++)current2.present_matrix[i][j] = pattern[x][i][j];
-     }
-     current2.present_x = 10;
-     current2.present_y = 1;
-     score2 = score2 +50;
-     }
+        x = random(5);
+        for(int i = 0;i < 4;i++){
+            for(int j = 0; j < 4; j++)current1.present_matrix[i][j] = pattern[x][i][j];
+        }
+        current1.present_x = 10;
+        current1.present_y = 0;
+        score1 = score1 + 50;
+        fisrt_pattern_flag1 = 1;
+        
+    }
+    else if (player == 2){
+        
+        x = random(5);
+        for(int i = 0;i < 4;i++){
+            for(int j = 0; j < 4; j++)current2.present_matrix[i][j] = pattern[x][i][j];
+        }
+        current2.present_x = 10;
+        current2.present_y = 1;
+        score2 = score2 +50;
+    }
 }
 
+/* setup the bluetooth that can be used */
 void setupBlueToothConnection() {
-
-     blueToothSerial.begin(38400); // Set BluetoothBee BaudRate to default baud rate 38400
-     blueToothSerial.print("\r\n+STWMOD=0\r\n"); // set the bluetooth work in slave mode
-     blueToothSerial.print("\r\n+STNA=GROUP 10\r\n"); // set name
-     blueToothSerial.print("\r\n+STOAUT=1\r\n"); 
-     blueToothSerial.print("\r\n+STAUTO=0\r\n"); 
-     blueToothSerial.print("\r\n+STPIN=1234\r\n");
-     delay(2000); 
-
-     while(blueToothSerial.available()) {
-      Serial.write(blueToothSerial.read());
-     }
-     
-     blueToothSerial.print("\r\n+INQ=1\r\n"); // make the slave bluetooth inquirable
-     Serial.println("The slave bluetooth is inquirable!"); 
-     delay(2000); // This delay is required. 
-     blueToothSerial.flush();
-
-     while(blueToothSerial.available()) {
-      Serial.write(blueToothSerial.read());
-     }
-     
+    
+    blueToothSerial.begin(38400);
+    blueToothSerial.print("\r\n+STWMOD=0\r\n"); // set the bluetooth work in slave mode
+    blueToothSerial.print("\r\n+STNA=GROUP 10\r\n"); // set name
+    blueToothSerial.print("\r\n+STOAUT=1\r\n");
+    blueToothSerial.print("\r\n+STAUTO=0\r\n");
+    blueToothSerial.print("\r\n+STPIN=1234\r\n");
+    delay(2000);
+    
+    while(blueToothSerial.available()) {
+        Serial.write(blueToothSerial.read());
+    }
+    
+    blueToothSerial.print("\r\n+INQ=1\r\n");
+    Serial.println("The slave bluetooth is inquirable!");
+    delay(2000); // This delay is required.
+    blueToothSerial.flush();
+    
+    while(blueToothSerial.available()) {
+        Serial.write(blueToothSerial.read());
+    }
 }
 
+/* get the operation from phone apps */
 int bluetoothcontrol(){
-  char c;
-  int b;
-  if(blueToothSerial.available()){
-    c= blueToothSerial.read();
-    if (c =='w' ) b = 257;
-    else if (c == 'a') b = 255;
-    else if(c =='s')   b = 259;
-    else if (c == 'd') b = 256;
-    else if (c == 'r') { 
-                       b = 0;
-                       blueToothSerial.println(dis_scr1);
-                       blueToothSerial.println(dis_scr2);
-                        }
-    while(Serial2.read() >= 0){}
-    
-    }
-    else  b = 258;
-  return b;
-  }
-
-  void draw2(int x) {
-    // graphic commands to redraw the complete screen should be placed here
-    //u8g.setFont(u8g_font_unifont);
-   if(x ==1 ){
-         u8g.drawFrame(0,0,42,50);
-        u8g.setFont(u8g_font_5x8);
-        sprintf (dis_scr1,"score:%d",score1);
-        if(drawgameover1 == 1){       u8g.setColorIndex(0);
-                                 u8g.drawBox(1, 23, 38, 10);
-                                 u8g.setColorIndex(1);
-                                 u8g.drawStr(1,30,"gameover");
-                                            }
-       u8g.drawStr(0,63,dis_scr1);
-    }
-   else if(x == 2){
-    
-    u8g.setFont(u8g_font_5x8);
-
-    u8g.drawFrame(0,0,42,50);
-     sprintf (dis_scr1,"score1:%d",score1);
-   if(drawgameover1 == 1){       u8g.setColorIndex(0);
-                                 u8g.drawBox(1, 23, 38, 10);
-                                 u8g.setColorIndex(1);
-                                 u8g.drawStr(1,30,"gameover");
-                                            }
-       u8g.drawStr(0,63,dis_scr1);
-     u8g.drawFrame(63,0,42,50);
-     sprintf (dis_scr2,"score2:%d",score2);
-     if(drawgameover2 == 1){      u8g.setColorIndex(0);
-                                  u8g.drawBox(64, 23, 38, 10);
-                                  u8g.setColorIndex(1);
-                                  u8g.drawStr(64,30,"gameover");
-                                            }
-       u8g.drawStr(63,63,dis_scr2); 
-   }
-    
+    char c;
+    int b;
+    if(blueToothSerial.available()){
+        c= blueToothSerial.read();
+        if (c =='w' ) b = 257;
+        else if (c == 'a') b = 255;
+        else if(c =='s')   b = 259;
+        else if (c == 'd') b = 256;
+        else if (c == 'r') {
+            b = 0;
+            blueToothSerial.println(dis_scr1);
+            blueToothSerial.println(dis_scr2);
+        }
+        while(Serial2.read() >= 0){}
+    }
+    else  b = 258;
+    return b;
 }
+
+/* draw the frame and text of the game on LCD */
+void draw2(int x) {
+    if(x ==1 ){
+        u8g.drawFrame(0,0,42,50);
+        u8g.setFont(u8g_font_5x8);
+        sprintf (dis_scr1,"score:%d",score1);
+        if(drawgameover1 == 1){       u8g.setColorIndex(0);
+            u8g.drawBox(1, 23, 38, 10);
+            u8g.setColorIndex(1);
+            u8g.drawStr(1,30,"gameover");
+        }
+        u8g.drawStr(0,63,dis_scr1);
+    }
+    else if(x == 2){
+        u8g.setFont(u8g_font_5x8);
+        u8g.drawFrame(0,0,42,50);
+        sprintf (dis_scr1,"score1:%d",score1);
+        if(drawgameover1 == 1){       u8g.setColorIndex(0);
+            u8g.drawBox(1, 23, 38, 10);
+            u8g.setColorIndex(1);
+            u8g.drawStr(1,30,"gameover");
+        }
+        u8g.drawStr(0,63,dis_scr1);
+        u8g.drawFrame(63,0,42,50);
+        sprintf (dis_scr2,"score2:%d",score2);
+        if(drawgameover2 == 1){      u8g.setColorIndex(0);
+            u8g.drawBox(64, 23, 38, 10);
+            u8g.setColorIndex(1);
+            u8g.drawStr(64,30,"gameover");
+        }
+        u8g.drawStr(63,63,dis_scr2);
+    }
+}
+
+/* select the players from operation */
+void Selection(){
+    int ccc = 0;
+    int ddd = 1;
+    u8g.firstPage();
+    do {
+        u8g.setFont(u8g_font_helvR08);
+        u8g.drawTriangle(35,33, 40,36, 35,39);
+        u8g.drawStr(50, 40, "1 Player");
+        u8g.drawStr(50, 55, "2 Players");
+        u8g.setFont(u8g_font_7x14B);
+        u8g.drawStr(35, 20, "3D Tetris");
+    } while( u8g.nextPage() );
+    while(ddd){
+        ccc = bluetoothcontrol();
+        if (ccc == 255){
+            players = 1;
+            u8g.firstPage();
+            do {
+                u8g.setFont(u8g_font_helvR08);
+                u8g.drawTriangle(35,33, 40,36, 35,39);
+                u8g.drawStr(50, 40, "1 Player");
+                u8g.drawStr(50, 55, "2 Players");
+                u8g.setFont(u8g_font_7x14B);
+                u8g.drawStr(35, 20, "3D Tetris");
+            } while( u8g.nextPage() );
+        }
+        else if (ccc == 256){
+            players = 2;
+            u8g.firstPage();
+            do {
+                u8g.drawTriangle(35,48, 40,51, 35,54);
+                u8g.setFont(u8g_font_helvR08);
+                u8g.drawStr(50, 40, "1 Player");
+                u8g.drawStr(50, 55, "2 Players");
+                u8g.setFont(u8g_font_7x14B);
+                u8g.drawStr(35, 20, "3D Tetris");
+            } while( u8g.nextPage() );
+        }
+        else if(ccc == 257 ){
+            ddd = 0;
+        }
+    }
+}
+
+/* tetris game code */
+void Tetris_gaming(int NumbersOfP){
+    if(NumbersOfP == 1){
+        int one_playerloop = 1;
+        while(one_playerloop){
+            int ba;
+            int i=0;
+            if(new_pattern == 0 ){
+                if( flag1.gameover == 1){
+                    vanish_block(1);
+                    random_pattern(1);
+                    reset_loop(1);
+                    check_block(Gameover,1);
+                    composite_map(1);}
+                else{
+                    new_pattern = 1;
+                    drawgameover1 = 1;
+                    one_playerloop =0;
+                }
+            }
+            while(new_pattern)
+            {
+                reset_flag(1);
+                u8g.firstPage();
+                do {
+                    draw2(1);
+                    u8g.drawBitmapP( 1, 1, 5, 48,display_matrix);
+                }
+                while( u8g.nextPage() );
+                ba = ThreeD_results();
+                if (i==0)check_block(258,1);
+                else check_block(ba,1);
+                composite_map(1);
+                drawpattern(0,0,map_temp1,1);
+                delay(250);
+                i=(i+1)%5;
+            }
+        }
+    }
+    else if (NumbersOfP == 2){
+        int two_playersloop_1 = 1;
+        int two_playersloop_2 = 1;
+        int i=1;
+        int j=1;
+        while(two_playersloop_1|two_playersloop_2){
+            int ba=0;
+            int bb=0;
+            if(new_pattern == 0 ){
+                if( flag1.gameover == 1){
+                    vanish_block(1);
+                    random_pattern(1);
+                    reset_loop(1);
+                    check_block(Gameover,1);
+                    composite_map(1);}
+                else{
+                    new_pattern =1;
+                    drawgameover1 = 1;
+                    two_playersloop_1 = 0;
+                }
+            }
+            if(new_pattern_2 == 0 ){
+                if(flag2.gameover == 1){
+                    vanish_block(2);
+                    random_pattern(2);
+                    reset_loop(2);
+                    check_block(Gameover,2);
+                    composite_map(2);
+                }
+                else{       new_pattern_2 = 1;
+                    drawgameover2 = 1;
+                    two_playersloop_2 = 0;
+                }
+            }
+            while(new_pattern &  new_pattern_2)
+            {
+                reset_flag(1);
+                reset_flag(2);
+                u8g.firstPage();
+                do {
+                    u8g.drawBitmapP( 1, 1, 5, 48,display_matrix);
+                    u8g.drawBitmapP( 64, 1, 5, 48,display_matrix_2);
+                    draw2(2);
+                }
+                while( u8g.nextPage() );
+                if (i==0)check_block(258,1);
+                else {        ba = ThreeD_results();
+                    check_block(ba,1);}
+                if (j==0)check_block(258,2);
+                else {
+                    bb = bluetoothcontrol();
+                    check_block(bb,2);
+                }
+                composite_map(1);
+                composite_map(2);
+                drawpattern(0,0,map_temp1,1);
+                drawpattern(0,0,map_temp2,2);
+                delay(250);
+                i=(i+1)%5;
+                j=(j+1)%5;
+            }
+        }
+    }
+    u8g.firstPage();
+
+    do {
+        u8g.setFont(u8g_font_fub14);
+        u8g.drawStr(8, 40, "HAVE FUN!");
+    } while( u8g.nextPage() );
+}
+
+
